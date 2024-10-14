@@ -23,6 +23,8 @@ from launch.actions import (
     DeclareLaunchArgument,
     GroupAction,
     IncludeLaunchDescription,
+    ExecuteProcess,
+    TimerAction
 )
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -205,6 +207,23 @@ def generate_launch_description():
         ]
     )
 
+    message = (
+        "{ header: { stamp: { sec: 0, nanosec: 0 }, frame_id: 'map' }, "
+        # warehouse_2:
+        "pose: { pose: { position: { x: -12.8, y: 0.61, z: 0.0 }, orientation: { x: 0.0, y: 0.0, z: -0.70822, w: 0.705992 } }, "
+        "covariance: [0.25, 0, 0, 0, 0, 0, 0, 0.25, 0, 0, 0, 0, 0, 0, 0.25, 0, 0, 0, 0, 0, "
+        "0.0685, 0, 0, 0, 0, 0, 0, 0.0685, 0, 0, 0, 0, 0, 0.0685] } }"
+    )
+
+    # Define the command to publish to the topic
+    publish_cmd_1 = ExecuteProcess(
+        cmd=[
+            'ros2', 'topic', 'pub', '/initialpose', 'geometry_msgs/msg/PoseWithCovarianceStamped',
+            message, '--once'
+        ],
+        output='screen'
+    )
+
     # Create the launch description and populate
     ld = LaunchDescription()
 
@@ -226,7 +245,8 @@ def generate_launch_description():
     ld.add_action(static_publisher_cmd)
     ld.add_action(start_map_server)
     ld.add_action(loopback_sim_cmd)
-    ld.add_action(rviz_cmd)
+    # ld.add_action(rviz_cmd)
     ld.add_action(bringup_cmd)
+    ld.add_action(TimerAction(period=1.0, actions=[publish_cmd_1]))
 
     return ld
