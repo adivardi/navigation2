@@ -227,6 +227,11 @@ void ObstacleLayer::onInitialize()
 
     const auto custom_qos_profile = rclcpp::SensorDataQoS().keep_last(50);
 
+RCLCPP_INFO_STREAM(logger_, "Actual QoS used:"
+  << "  Reliability: " << (custom_qos_profile.reliability() == rclcpp::ReliabilityPolicy::Reliable ? "RELIABLE" : "BEST_EFFORT")
+  << "  Durability: " << (custom_qos_profile.durability() == rclcpp::DurabilityPolicy::TransientLocal ? "TRANSIENT_LOCAL" : "VOLATILE")
+  << "  History: " << (custom_qos_profile.history() == rclcpp::HistoryPolicy::KeepAll ? "KEEP_ALL" : "KEEP_LAST")
+  << "  Depth: " << custom_qos_profile.depth());
     // create a callback for the topic
     if (data_type == "LaserScan") {
       auto sub = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan,
