@@ -18,7 +18,6 @@ import os
 import tempfile
 
 from ament_index_python.packages import get_package_share_directory
-
 from launch import LaunchDescription
 from launch.actions import (
     AppendEnvironmentVariable,
@@ -27,12 +26,12 @@ from launch.actions import (
     IncludeLaunchDescription,
     OpaqueFunction,
     RegisterEventHandler,
+    TimerAction,
 )
 from launch.conditions import IfCondition
 from launch.event_handlers import OnShutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration, PythonExpression
-
 from launch_ros.actions import Node
 
 
@@ -64,12 +63,15 @@ def generate_launch_description():
     headless = LaunchConfiguration('headless')
     world = LaunchConfiguration('world')
     pose = {
-        'x': LaunchConfiguration('x_pose', default='-8.00'),  # Warehouse: 2.12
-        'y': LaunchConfiguration('y_pose', default='0.00'),  # Warehouse: -21.3
-        'z': LaunchConfiguration('z_pose', default='0.01'),
-        'R': LaunchConfiguration('roll', default='0.00'),
-        'P': LaunchConfiguration('pitch', default='0.00'),
-        'Y': LaunchConfiguration('yaw', default='0.00'),  # Warehouse: 1.57
+        # 'x': LaunchConfiguration('x_pose', default='-8.00'),  # depot
+        "x": LaunchConfiguration("x_pose", default="2.12"),  # Warehouse
+        # 'y': LaunchConfiguration('y_pose', default='0.00'),  # depot
+        "y": LaunchConfiguration("y_pose", default="-21.3"),  # Warehouse: -21.3
+        "z": LaunchConfiguration("z_pose", default="0.01"),
+        "R": LaunchConfiguration("roll", default="0.00"),
+        "P": LaunchConfiguration("pitch", default="0.00"),
+        # 'Y': LaunchConfiguration('yaw', default='0.00'),  # depot
+        "Y": LaunchConfiguration("yaw", default="1.57"),  # Warehouse: 1.57
     }
     robot_name = LaunchConfiguration('robot_name')
     robot_sdf = LaunchConfiguration('robot_sdf')
@@ -92,9 +94,9 @@ def generate_launch_description():
     )
 
     declare_map_yaml_cmd = DeclareLaunchArgument(
-        'map',
-        default_value=os.path.join(bringup_dir, 'maps', 'depot.yaml'),  # Try warehouse.yaml!
-        description='Full path to map file to load',
+        "map",
+        default_value=os.path.join(bringup_dir, "maps", "warehouse_empty.yaml"),  # Try warehouse.yaml!
+        description="Full path to map file to load",
     )
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
@@ -154,9 +156,9 @@ def generate_launch_description():
     )
 
     declare_world_cmd = DeclareLaunchArgument(
-        'world',
-        default_value=os.path.join(sim_dir, 'worlds', 'depot.sdf'),  # Try warehouse.sdf!
-        description='Full path to world model file to load',
+        "world",
+        default_value=os.path.join(sim_dir, "worlds", "warehouse_empty.sdf"),  # Try warehouse.sdf!
+        description="Full path to world model file to load",
     )
 
     declare_robot_name_cmd = DeclareLaunchArgument(
@@ -256,6 +258,22 @@ def generate_launch_description():
                           'pitch': pose['P'],
                           'yaw': pose['Y']}.items())
 
+    # warehouse:
+    # "pose: { pose: { position: { x: -12.0, y: 0.0, z: 0.0 }, orientation: { x: 0.0, y: 0.0, z: -0.70822, w: 0.705992 } }, "
+    # warehouse:
+    message = (
+        "{ header: { stamp: { sec: 0, nanosec: 0 }, frame_id: 'map' }, "
+        "pose: { pose: { position: { x: 2.12, y: -21.3, z: 0.0 }, orientation: { x: 0.0, y: 0.0, z: 0.7068252, w: 0.7073883 } }, "
+        "covariance: [0.25, 0, 0, 0, 0, 0, 0, 0.25, 0, 0, 0, 0, 0, 0, 0.25, 0, 0, 0, 0, 0, "
+        "0.0685, 0, 0, 0, 0, 0, 0, 0.0685, 0, 0, 0, 0, 0, 0.0685] } }"
+    )
+
+    # Define the command to publish to the topic
+    publish_cmd_1 = ExecuteProcess(
+        cmd=["ros2", "topic", "pub", "/initialpose", "geometry_msgs/msg/PoseWithCovarianceStamped", message, "--once"],
+        output="screen",
+    )
+
     # Create the launch description and populate
     ld = LaunchDescription()
 
@@ -290,5 +308,7 @@ def generate_launch_description():
     ld.add_action(start_robot_state_publisher_cmd)
     # ld.add_action(rviz_cmd)
     ld.add_action(bringup_cmd)
+    # ld.add_action(TimerAction(period=15.0, actions=[publish_cmd_1]))
+    # ld.add_action(TimerAction(period=15.0, actions=[publish_cmd_1]))
 
     return ld

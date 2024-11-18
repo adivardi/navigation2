@@ -15,7 +15,6 @@
 import os
 
 from ament_index_python.packages import get_package_share_directory
-
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, EmitEvent, RegisterEventHandler
 from launch.conditions import IfCondition, UnlessCondition
@@ -59,9 +58,8 @@ def generate_launch_description():
     )
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='false',
-        description='Use simulation (Gazebo) clock if true')
+        "use_sim_time", default_value="true", description="Use simulation (Gazebo) clock if true"
+    )
 
     # Launch rviz
     start_rviz_cmd = Node(
@@ -73,44 +71,44 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time}],
     )
 
-    namespaced_rviz_config_file = ReplaceString(
-        source_file=rviz_config_file,
-        replacements={'<robot_namespace>': ('/', namespace)},
-    )
+    # namespaced_rviz_config_file = ReplaceString(
+    #     source_file=rviz_config_file,
+    #     replacements={'<robot_namespace>': ('/', namespace)},
+    # )
 
-    start_namespaced_rviz_cmd = Node(
-        condition=IfCondition(use_namespace),
-        package='rviz2',
-        executable='rviz2',
-        namespace=namespace,
-        arguments=['-d', namespaced_rviz_config_file],
-        parameters=[{'use_sim_time': use_sim_time}],
-        output='screen',
-        remappings=[
-            ('/map', 'map'),
-            ('/tf', 'tf'),
-            ('/tf_static', 'tf_static'),
-            ('/goal_pose', 'goal_pose'),
-            ('/clicked_point', 'clicked_point'),
-            ('/initialpose', 'initialpose'),
-        ],
-    )
+    # start_namespaced_rviz_cmd = Node(
+    #     condition=IfCondition(use_namespace),
+    #     package='rviz2',
+    #     executable='rviz2',
+    #     namespace=namespace,
+    #     arguments=['-d', namespaced_rviz_config_file],
+    #     parameters=[{'use_sim_time': use_sim_time}],
+    #     output='screen',
+    #     remappings=[
+    #         ('/map', 'map'),
+    #         ('/tf', 'tf'),
+    #         ('/tf_static', 'tf_static'),
+    #         ('/goal_pose', 'goal_pose'),
+    #         ('/clicked_point', 'clicked_point'),
+    #         ('/initialpose', 'initialpose'),
+    #     ],
+    # )
 
-    exit_event_handler = RegisterEventHandler(
-        condition=UnlessCondition(use_namespace),
-        event_handler=OnProcessExit(
-            target_action=start_rviz_cmd,
-            on_exit=EmitEvent(event=Shutdown(reason='rviz exited')),
-        ),
-    )
+    # exit_event_handler = RegisterEventHandler(
+    #     condition=UnlessCondition(use_namespace),
+    #     event_handler=OnProcessExit(
+    #         target_action=start_rviz_cmd,
+    #         on_exit=EmitEvent(event=Shutdown(reason='rviz exited')),
+    #     ),
+    # )
 
-    exit_event_handler_namespaced = RegisterEventHandler(
-        condition=IfCondition(use_namespace),
-        event_handler=OnProcessExit(
-            target_action=start_namespaced_rviz_cmd,
-            on_exit=EmitEvent(event=Shutdown(reason='rviz exited')),
-        ),
-    )
+    # exit_event_handler_namespaced = RegisterEventHandler(
+    #     condition=IfCondition(use_namespace),
+    #     event_handler=OnProcessExit(
+    #         target_action=start_namespaced_rviz_cmd,
+    #         on_exit=EmitEvent(event=Shutdown(reason='rviz exited')),
+    #     ),
+    # )
 
     # Create the launch description and populate
     ld = LaunchDescription()
@@ -123,10 +121,10 @@ def generate_launch_description():
 
     # Add any conditioned actions
     ld.add_action(start_rviz_cmd)
-    ld.add_action(start_namespaced_rviz_cmd)
+    # ld.add_action(start_namespaced_rviz_cmd)
 
     # Add other nodes and processes we need
-    ld.add_action(exit_event_handler)
-    ld.add_action(exit_event_handler_namespaced)
+    # ld.add_action(exit_event_handler)
+    # ld.add_action(exit_event_handler_namespaced)
 
     return ld
