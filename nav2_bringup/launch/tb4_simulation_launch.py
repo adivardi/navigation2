@@ -198,15 +198,15 @@ def generate_launch_description():
     bringup_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(launch_dir, 'bringup_launch.py')),
         launch_arguments={
-            'namespace': namespace,
-            'use_namespace': use_namespace,
-            'slam': slam,
-            'map': map_yaml_file,
-            'use_sim_time': use_sim_time,
-            'params_file': params_file,
-            'autostart': autostart,
-            'use_composition': use_composition,
-            'use_respawn': use_respawn,
+            'namespace': namespace,  # default: ''
+            'use_namespace': use_namespace,  # default:  'false'
+            'slam': slam,  # default: 'False'
+            'map': map_yaml_file,  # default: os.path.join(bringup_dir, "maps", "warehouse_empty.yaml")
+            'use_sim_time': use_sim_time,  # default: 'true'
+            'params_file': params_file,  # default: os.path.join(bringup_dir, 'params', 'nav2_params.yaml')
+            'autostart': autostart,  # default: 'true'
+            'use_composition': use_composition,  # default: 'True'
+            'use_respawn': use_respawn,  # default: 'False'
         }.items(),
     )
 
@@ -307,7 +307,7 @@ def generate_launch_description():
     # Add the actions to launch all of the navigation nodes
     ld.add_action(start_robot_state_publisher_cmd)
     # ld.add_action(rviz_cmd)
-    ld.add_action(bringup_cmd)
+    # ld.add_action(bringup_cmd)
     # ld.add_action(TimerAction(period=15.0, actions=[publish_cmd_1]))
     # ld.add_action(TimerAction(period=15.0, actions=[publish_cmd_1]))
 
