@@ -401,7 +401,6 @@ void Optimizer::applyControlSequenceConstraints()
   // --tried 1 limit ctrl_seq_(0) based on accel_limit from current robot speed (= state.vx(0,0))  (instead of in predict -> see it still accel issue)
   // TODO 4 or ideally based on last published command
   // at this point, control_sequence_ contains the softmax mean of state_.cu (u_virt)]
-/*
   float vx_last = utils::clamp(s.constraints.vx_min, s.constraints.vx_max, control_sequence_.vx(0));
   float wz_last = utils::clamp(-s.constraints.wz, s.constraints.wz, control_sequence_.wz(0));
 
@@ -412,7 +411,7 @@ void Optimizer::applyControlSequenceConstraints()
     vy_last = utils::clamp(-s.constraints.vy, s.constraints.vy, control_sequence_.vy(0));
     control_sequence_.vy(0) = vy_last;
   }
-*/
+/*
   // limit acceleration between current feedback speed and first control in the sequence
   // float vx_last = static_cast<float>(state_.speed.linear.x);
   // float wz_last = static_cast<float>(state_.speed.angular.z);
@@ -424,8 +423,9 @@ void Optimizer::applyControlSequenceConstraints()
     // vy_last = static_cast<float>(state_.speed.linear.y);
     vy_last = initial_velocities_(1);
   }
+*/
 
-  for (unsigned int i = 0; i != control_sequence_.vx.size(); i++) {
+  for (unsigned int i = 1; i != control_sequence_.vx.size(); i++) {
     float & vx_curr = control_sequence_.vx(i);
     vx_curr = utils::clamp(s.constraints.vx_min, s.constraints.vx_max, vx_curr);
     if(vx_last > 0) {
