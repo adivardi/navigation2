@@ -33,6 +33,7 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "nav_msgs/msg/path.hpp"
+#include "nav2_util/geometry_utils.hpp"
 
 #include "nav2_mppi_controller/models/optimizer_settings.hpp"
 #include "nav2_mppi_controller/motion_models.hpp"
@@ -109,15 +110,14 @@ public:
    * @brief Get the optimal trajectory for a cycle for visualization
    * @return Optimal trajectory
    */
-  Eigen::ArrayXXf getOptimizedTrajectory(const models::ControlSequence& control_sequence) const;
+  Eigen::ArrayXXf getOptimizedTrajectory();
 
   /**
    * @brief Get the optimal control sequence for a cycle for visualization
    * @return Optimal control sequence
    */
   const models::ControlSequence & getOptimalControlSequence();
-  const models::ControlSequence & getOptimalControlSequenceUnconstrained();
-  const Eigen::ArrayXXf & getOptimalTrajectoryUnconstrained();
+
   /**
    * @brief Set the maximum speed based on the speed limits callback
    * @param speed_limit Limit of the speed for use
@@ -145,8 +145,6 @@ protected:
    * @brief Main function to generate, score, and return trajectories
    */
   void optimize();
-
-  void computeControlSequenceAccel(const models::ControlSequence& control_sequence);
 
   /**
    * @brief Prepare state information on new request for trajectory rollouts
@@ -193,13 +191,13 @@ protected:
    * @brief  Update velocities in state
    * @param state fill state with velocities on each step
    */
-  void updateStateVelocities(models::State & state);
+  void updateStateVelocities(models::State & state) const;
 
   /**
    * @brief  Update initial velocity in state
    * @param state fill state
    */
-  void updateInitialStateVelocities(models::State & state);
+  void updateInitialStateVelocities(models::State & state) const;
 
   /**
    * @brief predict velocities in state using model
@@ -231,6 +229,11 @@ protected:
    * using softmax function
    */
   void updateControlSequence();
+
+  /**
+   * @brief Update control history with the final command
+   */
+  void updateHistory();
 
   /**
    * @brief Convert control sequence to a twist command
@@ -278,17 +281,11 @@ protected:
 
   models::State state_;
   models::ControlSequence control_sequence_;
-  models::ControlSequence control_sequence_virtual_;
   std::array<mppi::models::Control, 4> control_history_;
   models::Trajectories generated_trajectories_;
   models::Path path_;
   geometry_msgs::msg::Pose goal_;
   Eigen::ArrayXf costs_;
-  geometry_msgs::msg::TwistStamped prev_control_twist_;
-  models::ControlSequence prev_control_sequence_;
-  Eigen::Array3f initial_velocities_;
-
-  Eigen::ArrayXXf optimal_trajectory_unconstrained_;
 
   CriticData critics_data_ = {
     state_, generated_trajectories_, path_, goal_,
